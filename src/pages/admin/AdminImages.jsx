@@ -47,29 +47,13 @@ export default function AdminImages() {
     setShowModal(true)
   }
 
-  const handleFileChange = async (e) => {
-    const selected = e.target.files[0];
-
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0]
     if (selected) {
-      try {
-        // 🔥 Compress image
-        const compressedFile = await imageCompression(selected, {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        });
-
-        // Set compressed file
-        setFile(compressedFile);
-
-        // Preview
-        setPreview(URL.createObjectURL(compressedFile));
-
-      } catch (error) {
-        console.error("Compression error:", error);
-      }
+      setFile(selected)
+      setPreview(URL.createObjectURL(selected))
     }
-  };
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -80,16 +64,7 @@ export default function AdminImages() {
       const formData = new FormData()
       formData.append('title', form.title)
       formData.append('category', form.category)
-
-      if (file) {
-        const compressedFile = await imageCompression(file, {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        });
-
-        formData.append('image', compressedFile);
-      }
+      if (file) formData.append('image', file)
 
       if (editingImage) {
         await updateImage(editingImage._id, formData)
