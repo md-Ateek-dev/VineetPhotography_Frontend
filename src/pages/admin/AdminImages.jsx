@@ -5,6 +5,34 @@ import { HiPlus, HiPencil, HiTrash, HiX, HiUpload, HiPhotograph } from 'react-ic
 
 const categories = ['Wedding', 'Pre-wedding', 'Haldi', 'Mehendi', 'Bridal', 'Other']
 
+// 🔥 IMAGE COMPRESSION FUNCTION (NO LIBRARY)
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    img.onload = () => {
+      const maxWidth = 1200
+      const scale = maxWidth / img.width
+
+      canvas.width = maxWidth
+      canvas.height = img.height * scale
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+      canvas.toBlob((blob) => {
+        const compressedFile = new File([blob], file.name, {
+          type: 'image/jpeg',
+        })
+        resolve(compressedFile)
+      }, 'image/jpeg', 0.7) // 🔥 70% quality
+    }
+
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 export default function AdminImages() {
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(true)
@@ -47,24 +75,34 @@ export default function AdminImages() {
     setShowModal(true)
   }
 
-  const handleFileChange = (e) => {
+  // 🔥 FILE SELECT + COMPRESS
+  const handleFileChange = async (e) => {
     const selected = e.target.files[0]
+
     if (selected) {
-      setFile(selected)
-      setPreview(URL.createObjectURL(selected))
+      const compressedFile = await compressImage(selected)
+
+      setFile(compressedFile)
+      setPreview(URL.createObjectURL(compressedFile))
     }
   }
 
+  // 🔥 SUBMIT WITH FAST UPLOAD
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.title || !form.category) return
 
     try {
       setSubmitting(true)
+
       const formData = new FormData()
       formData.append('title', form.title)
       formData.append('category', form.category)
-      if (file) formData.append('image', file)
+
+      if (file) {
+        const compressedFile = await compressImage(file)
+        formData.append('image', compressedFile)
+      }
 
       if (editingImage) {
         await updateImage(editingImage._id, formData)
@@ -80,22 +118,22 @@ export default function AdminImages() {
       setShowModal(false)
       fetchImages()
     } catch (error) {
-      console.error('Submit error:', error)
-      alert(error.response?.data?.message || 'Failed to save image')
+      console.error(error)
+      alert('Upload failed')
     } finally {
       setSubmitting(false)
     }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this image?')) return
+    if (!confirm('Delete image?')) return
+
     try {
       setDeleting(id)
       await deleteImage(id)
       setImages(prev => prev.filter(img => img._id !== id))
     } catch (error) {
-      console.error('Delete error:', error)
-      alert('Failed to delete image')
+      console.error(error)
     } finally {
       setDeleting(null)
     }
@@ -103,158 +141,53 @@ export default function AdminImages() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-white">Images</h1>
-          <p className="text-white/40 font-body text-sm">{images.length} images in gallery</p>
-        </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-5 py-2.5 gold-gradient text-dark-900 font-body font-semibold text-sm rounded-lg hover:shadow-lg hover:shadow-gold-500/20 transition-all"
-        >
-          <HiPlus size={18} />
-          Upload Image
+      <div className="flex justify-between mb-6">
+        <h1 className="text-white text-2xl font-bold">Images</h1>
+
+        <button onClick={openCreate} className="bg-yellow-500 px-4 py-2 rounded">
+          Upload
         </button>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => <div key={i} className="skeleton h-48 rounded-xl" />)}
-        </div>
-      ) : images.length === 0 ? (
-        <div className="text-center py-20 glass rounded-xl">
-          <HiPhotograph className="w-16 h-16 text-white/10 mx-auto mb-4" />
-          <p className="text-white/30 font-body">No images uploaded yet</p>
-          <button onClick={openCreate} className="mt-4 text-gold-400 font-body text-sm hover:underline">
-            Upload your first image
-          </button>
-        </div>
+        <p className="text-white">Loading...</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {images.map((image) => (
-            <motion.div
-              key={image._id}
-              layout
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="group relative rounded-xl overflow-hidden bg-dark-400"
-            >
-              <img src={image.imageUrl} alt={image.title} className="w-full h-48 object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-dark-900/70 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
-                <button
-                  onClick={() => openEdit(image)}
-                  className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors text-white"
-                >
-                  <HiPencil size={18} />
-                </button>
-                <button
-                  onClick={() => handleDelete(image._id)}
-                  disabled={deleting === image._id}
-                  className="p-2 bg-red-500/20 rounded-lg hover:bg-red-500/30 transition-colors text-red-400"
-                >
-                  <HiTrash size={18} />
-                </button>
-              </div>
-              <div className="p-3">
-                <p className="text-white text-xs font-body font-medium truncate">{image.title}</p>
-                <p className="text-gold-400/50 text-[10px] font-body">{image.category}</p>
-              </div>
-            </motion.div>
+        <div className="grid grid-cols-3 gap-4">
+          {images.map((img) => (
+            <div key={img._id}>
+              <img src={img.imageUrl} className="h-40 w-full object-cover" />
+
+              <button onClick={() => handleDelete(img._id)}>Delete</button>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Upload / Edit Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
-            onClick={() => setShowModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-dark-500 rounded-2xl p-6 w-full max-w-md border border-white/5"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-heading text-lg font-semibold text-white">
-                  {editingImage ? 'Edit Image' : 'Upload Image'}
-                </h3>
-                <button onClick={() => setShowModal(false)} className="text-white/40 hover:text-white">
-                  <HiX size={20} />
-                </button>
-              </div>
+      {showModal && (
+        <div className="fixed inset-0 bg-black flex justify-center items-center">
+          <div className="bg-white p-6 rounded w-80">
+            <form onSubmit={handleSubmit}>
+              <input
+                type="file"
+                onChange={handleFileChange}
+              />
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Image Upload */}
-                <div>
-                  <label className="text-white/50 text-xs font-body block mb-2">
-                    Image {editingImage ? '(leave empty to keep current)' : '*'}
-                  </label>
-                  <div
-                    className="border-2 border-dashed border-white/10 rounded-xl p-4 text-center cursor-pointer hover:border-gold-500/30 transition-colors"
-                    onClick={() => document.getElementById('image-file-input').click()}
-                  >
-                    {preview ? (
-                      <img src={preview} alt="Preview" className="max-h-40 mx-auto rounded-lg object-cover" />
-                    ) : (
-                      <div className="py-4">
-                        <HiUpload className="w-8 h-8 text-white/20 mx-auto mb-2" />
-                        <p className="text-white/30 text-xs font-body">Click to select image</p>
-                      </div>
-                    )}
-                  </div>
-                  <input
-                    type="file"
-                    id="image-file-input"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </div>
+              {preview && <img src={preview} className="h-40" />}
 
-                <div>
-                  <label className="text-white/50 text-xs font-body block mb-2">Title *</label>
-                  <input
-                    type="text"
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white font-body text-sm focus:outline-none focus:border-gold-500/50"
-                    placeholder="Image title"
-                  />
-                </div>
+              <input
+                type="text"
+                placeholder="Title"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+              />
 
-                <div>
-                  <label className="text-white/50 text-xs font-body block mb-2">Category *</label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white font-body text-sm focus:outline-none focus:border-gold-500/50"
-                  >
-                    {categories.map(cat => (
-                      <option key={cat} value={cat} className="bg-dark-700">{cat}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-3 gold-gradient text-dark-900 font-body font-semibold rounded-lg disabled:opacity-50 transition-all"
-                >
-                  {submitting ? 'Saving...' : editingImage ? 'Update Image' : 'Upload Image'}
-                </button>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <button type="submit">
+                {submitting ? 'Uploading...' : 'Submit'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
