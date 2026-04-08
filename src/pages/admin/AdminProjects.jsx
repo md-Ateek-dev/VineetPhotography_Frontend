@@ -2,7 +2,32 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getProjects, createProject, updateProject, deleteProject, removeProjectImage } from '../../services/api'
 import { HiPlus, HiPencil, HiTrash, HiX, HiUpload, HiCollection, HiPhotograph } from 'react-icons/hi'
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
 
+    img.onload = () => {
+      const maxWidth = 1200;
+      const scale = maxWidth / img.width;
+
+      canvas.width = maxWidth;
+      canvas.height = img.height * scale;
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob((blob) => {
+        const compressedFile = new File([blob], file.name, {
+          type: 'image/jpeg',
+        });
+        resolve(compressedFile);
+      }, 'image/jpeg', 0.7);
+    };
+
+    img.src = URL.createObjectURL(file);
+  });
+};
 export default function AdminProjects() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -51,12 +76,21 @@ export default function AdminProjects() {
     setShowModal(true)
   }
 
-  const handleFileChange = (e) => {
-    const selected = Array.from(e.target.files)
-    setFiles(prev => [...prev, ...selected])
-    const newPreviews = selected.map(f => URL.createObjectURL(f))
-    setPreviews(prev => [...prev, ...newPreviews])
-  }
+  const handleFileChange = async (e) => {
+    const selected = Array.from(e.target.files);
+
+    const compressedFiles = [];
+    const previewsArr = [];
+
+    for (let file of selected) {
+      const compressed = await compressImage(file);
+      compressedFiles.push(compressed);
+      previewsArr.push(URL.createObjectURL(compressed));
+    }
+
+    setFiles(prev => [...prev, ...compressedFiles]);
+    setPreviews(prev => [...prev, ...previewsArr]);
+  };
 
   const removePreview = (index) => {
     setFiles(prev => prev.filter((_, i) => i !== index))
@@ -78,8 +112,10 @@ export default function AdminProjects() {
       formData.append('date', form.date)
       formData.append('location', form.location)
       formData.append('description', form.description)
-      files.forEach(file => formData.append('images', file))
-
+      for (let file of files) {
+        const compressedFile = await compressImage(file);
+        formData.append('images', compressedFile);
+      }
       if (editingProject) {
         await updateProject(editingProject._id, formData)
       } else {
