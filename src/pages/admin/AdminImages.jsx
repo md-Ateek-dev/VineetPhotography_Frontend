@@ -5,6 +5,34 @@ import { HiPlus, HiPencil, HiTrash, HiX, HiUpload, HiPhotograph } from 'react-ic
 
 const categories = ['Wedding', 'Pre-wedding', 'Haldi', 'Mehendi', 'Bridal', 'Other']
 
+// 🔥 IMAGE COMPRESSION FUNCTION (NO INSTALL)
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    img.onload = () => {
+      const maxWidth = 1200;
+      const scale = maxWidth / img.width;
+
+      canvas.width = maxWidth;
+      canvas.height = img.height * scale;
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob((blob) => {
+        const compressedFile = new File([blob], file.name, {
+          type: 'image/jpeg',
+        });
+        resolve(compressedFile);
+      }, 'image/jpeg', 0.7);
+    };
+
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 export default function AdminImages() {
   const [images, setImages] = useState([])
   const [loading, setLoading] = useState(true)
@@ -47,14 +75,16 @@ export default function AdminImages() {
     setShowModal(true)
   }
 
-  const handleFileChange = (e) => {
-    const selected = e.target.files[0]
-    if (selected) {
-      setFile(selected)
-      setPreview(URL.createObjectURL(selected))
-    }
-  }
+  const handleFileChange = async (e) => {
+    const selected = e.target.files[0];
 
+    if (selected) {
+      const compressedFile = await compressImage(selected);
+
+      setFile(compressedFile);
+      setPreview(URL.createObjectURL(compressedFile));
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.title || !form.category) return
@@ -64,8 +94,10 @@ export default function AdminImages() {
       const formData = new FormData()
       formData.append('title', form.title)
       formData.append('category', form.category)
-      if (file) formData.append('image', file)
-
+      if (file) {
+        const compressedFile = await compressImage(file);
+        formData.append('image', compressedFile);
+      }
       if (editingImage) {
         await updateImage(editingImage._id, formData)
       } else {
