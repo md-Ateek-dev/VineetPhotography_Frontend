@@ -100,7 +100,7 @@ export default function FeaturedProjects() {
                         {project.date}
                       </span>
                     </div>
-                    <div className="mt-4 flex items-center gap-2 text-gold-400 text-sm font-body opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="mt-4 flex items-center gap-2 text-gold-400 text-sm font-body opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
                       View Project <HiArrowRight />
                     </div>
                   </div>

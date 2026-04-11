@@ -30,11 +30,10 @@ export default function Navbar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
           ? 'glass-dark py-3 shadow-lg shadow-black/20'
           : 'bg-transparent py-5'
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
@@ -48,7 +47,7 @@ export default function Navbar() {
                 Vineet
               </h1>
               <p className="text-[10px] uppercase tracking-[0.3em] text-gold-400/60 -mt-1">
-                Photography
+                Photography Studios
               </p>
             </div>
           </Link>
@@ -59,11 +58,10 @@ export default function Navbar() {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`relative px-4 py-2 text-sm font-body tracking-wide transition-colors duration-300 ${
-                  location.pathname === link.path
+                className={`relative px-4 py-2 text-sm font-body tracking-wide transition-colors duration-300 ${location.pathname === link.path
                     ? 'text-gold-400'
                     : 'text-white/70 hover:text-gold-300'
-                }`}
+                  }`}
               >
                 {link.name}
                 {location.pathname === link.path && (
@@ -116,11 +114,10 @@ export default function Navbar() {
                 >
                   <Link
                     to={link.path}
-                    className={`block py-3 px-4 rounded-lg text-sm font-body transition-all ${
-                      location.pathname === link.path
+                    className={`block py-3 px-4 rounded-lg text-sm font-body transition-all ${location.pathname === link.path
                         ? 'text-gold-400 bg-gold-500/10'
                         : 'text-white/70 hover:text-gold-300 hover:bg-white/5'
-                    }`}
+                      }`}
                   >
                     {link.name}
                   </Link>

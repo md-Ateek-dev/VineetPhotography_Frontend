@@ -18,7 +18,7 @@ export default function Footer() {
               </div>
               <div>
                 <h3 className="font-heading text-xl font-semibold gold-text">Vineet</h3>
-                <p className="text-[10px] uppercase tracking-[0.3em] text-gold-400/60 -mt-1">Photography</p>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-gold-400/60 -mt-1">Photography Studios</p>
               </div>
             </div>
             <p className="text-white/50 text-sm font-body leading-relaxed">
@@ -103,7 +103,7 @@ export default function Footer() {
       <div className="border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/30 text-xs font-body">
-            © {currentYear} Vineet Photography. All rights reserved.
+            © {currentYear} Vineet Photography Studios. All rights reserved.
           </p>
           <Link
             to="/admin/login"

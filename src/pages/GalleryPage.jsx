@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getImages } from '../services/api'
 import { HiX, HiChevronLeft, HiChevronRight } from 'react-icons/hi'
+import Scroll3DWrapper from '../components/Scroll3DWrapper'
 
 const categories = ['All', 'Wedding', 'Pre-wedding', 'Haldi', 'Mehendi', 'Bridal']
 
@@ -84,37 +85,38 @@ export default function GalleryPage() {
   return (
     <main className="pt-28 pb-20 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-12"
-        >
-          <h1 className="font-heading text-4xl sm:text-5xl font-bold text-white mb-4">
-            Photo <span className="gold-text">Gallery</span>
-          </h1>
-          <p className="text-white/40 font-body text-sm max-w-xl mx-auto">
-            Browse through our collection of wedding photography
-          </p>
-        </motion.div>
+        <Scroll3DWrapper>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <h1 className="font-heading text-4xl sm:text-5xl font-bold text-white mb-4">
+              Photo <span className="gold-text">Gallery</span>
+            </h1>
+            <p className="text-white/40 font-body text-sm max-w-xl mx-auto">
+              Browse through our collection of wedding photography
+            </p>
+          </motion.div>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-5 py-2 rounded-full text-xs font-body font-medium tracking-wide transition-all duration-300 ${
-                activeCategory === cat
-                  ? 'gold-gradient text-dark-900'
-                  : 'border border-white/10 text-white/50 hover:text-gold-300 hover:border-gold-500/30'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+          {/* Category Filter */}
+          <div className="flex flex-wrap justify-center gap-2 mb-12">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`px-5 py-2 rounded-full text-xs font-body font-medium tracking-wide transition-all duration-300 ${
+                  activeCategory === cat
+                    ? 'gold-gradient text-dark-900'
+                    : 'border border-white/10 text-white/50 hover:text-gold-300 hover:border-gold-500/30'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </Scroll3DWrapper>
 
         {/* Gallery Grid */}
         {loading ? (
@@ -131,7 +133,7 @@ export default function GalleryPage() {
             <p className="text-white/20 font-body text-sm">Try a different category</p>
           </div>
         ) : (
-          <>
+          <Scroll3DWrapper>
             <div className="masonry-grid">
               {images.map((image, index) => (
                 <motion.div
@@ -151,7 +153,7 @@ export default function GalleryPage() {
                       className="w-full h-auto rounded-xl"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl">
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-900/90 via-dark-900/20 to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 rounded-xl">
                       <div className="absolute bottom-4 left-4 right-4">
                         <p className="text-white font-heading text-sm font-semibold">{image.title}</p>
                         <p className="text-gold-400/80 text-xs font-body">{image.category}</p>
@@ -162,14 +164,12 @@ export default function GalleryPage() {
               ))}
             </div>
 
-            {/* Loading More Indicator */}
             {loadingMore && (
               <div className="flex justify-center py-8">
                 <div className="w-8 h-8 border-2 border-gold-400/30 border-t-gold-400 rounded-full animate-spin" />
               </div>
             )}
 
-            {/* Load More Button (fallback) */}
             {page < totalPages && !loadingMore && (
               <div className="text-center mt-12">
                 <button
@@ -180,7 +180,7 @@ export default function GalleryPage() {
                 </button>
               </div>
             )}
-          </>
+          </Scroll3DWrapper>
         )}
       </div>
 
